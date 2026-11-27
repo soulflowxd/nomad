@@ -1,4 +1,4 @@
-# School Calendar Sync
+# Nomad
 
 A Chrome/Edge extension (Manifest V3) that keeps your **Canvas** and **D2L Brightspace**
 assignments and events in sync with **Google Calendar**, automatically.

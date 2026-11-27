@@ -142,7 +142,7 @@ export function App() {
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <CalendarCheck className="size-5 text-primary" aria-hidden />
-          <h1 className="text-base font-semibold">School Calendar Sync</h1>
+          <h1 className="text-base font-semibold">Nomad</h1>
         </div>
         <Button variant="ghost" size="icon-sm" aria-label="Settings" onClick={() => void browser.runtime.openOptionsPage()}>
           <Settings />

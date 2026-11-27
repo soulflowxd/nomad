@@ -1,8 +1,8 @@
-# Privacy Policy – School Calendar Sync (DRAFT)
+# Privacy Policy – Nomad (DRAFT)
 
 _Draft written from the code. Not legal advice. Review before publishing._
 
-School Calendar Sync has **no server**. The developer never receives your data.
+Nomad has **no server**. The developer never receives your data.
 
 ## What the extension handles
 

@@ -1,5 +1,5 @@
 {
-  "name": "school-calendar-sync",
+  "name": "nomad",
   "description": "Sync Canvas and D2L calendars to Google Calendar",
   "private": true,
   "license": "AGPL-3.0-or-later",

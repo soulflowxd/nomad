@@ -52,7 +52,7 @@ export async function createCalendar(token: string, summary: string): Promise<Go
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return (await gfetch<GoogleCalendar>(token, '/calendars', {
     method: 'POST',
-    body: JSON.stringify({ summary, timeZone, description: 'Synced from Canvas and D2L by School Calendar Sync.' }),
+    body: JSON.stringify({ summary, timeZone, description: 'Synced from Canvas and D2L by Nomad.' }),
   }))!;
 }
 

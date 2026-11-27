@@ -6,7 +6,7 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   vite: () => ({ plugins: [tailwindcss()] }),
   manifest: {
-    name: 'School Calendar Sync',
+    name: 'Nomad',
     description: 'Automatically sync your Canvas and D2L calendars to Google Calendar.',
     permissions: ['storage', 'alarms', 'identity', 'activeTab', 'scripting'],
     // Feed hosts are requested one school at a time, at runtime, when a feed is added.
