@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from 'date-fns';
-import { AlertCircle, CalendarCheck, Link2, Loader2, RefreshCw, ScanSearch, Settings, Trash2 } from 'lucide-react';
+import { AlertCircle, Link2, Loader2, RefreshCw, ScanSearch, Settings, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
 import { Badge } from '@/components/ui/badge';
@@ -197,7 +197,7 @@ export function App() {
     <main className="flex w-[360px] flex-col gap-4 p-4">
       <header className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <CalendarCheck className="size-5 text-primary" aria-hidden />
+          <img src="/icon/32.png" alt="" className="size-6 rounded-md" />
           <h1 className="text-base font-semibold">Nomad</h1>
         </div>
         <Button variant="ghost" size="icon-sm" aria-label="Settings" onClick={() => void browser.runtime.openOptionsPage()}>

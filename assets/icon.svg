@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F6B35C"/>
+      <stop offset="1" stop-color="#E0702E"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#sky)"/>
+  <!-- Camel facing right -->
+  <path fill="#FFFFFF" d="
+    M18 72
+    C18 62 25 54 33 52
+    C36 36 52 34 55 48
+    C59 36 74 34 78 50
+    C81 55 86 55 88 50
+    L95 31
+    C96 26 100 23 105 24
+    L114 27
+    C118 28 118 34 114 35
+    L106 36
+    L99 57
+    C97 65 93 71 89 73
+    L89 104
+    L82 104
+    L81 78
+    L76 78
+    L75 104
+    L68 104
+    L68 76
+    C58 78 47 78 39 76
+    L38 104
+    L31 104
+    L30 78
+    L27 78
+    L26 104
+    L19 104
+    L19 76
+    C18 75 18 73 18 72 Z"/>
+  <path d="M19 62 C14 66 13 72 14 78" fill="none" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round"/>
+</svg>

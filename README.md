@@ -82,7 +82,7 @@ Safety rules in the sync engine:
 - Submit the OAuth consent screen for verification. Google needs a homepage, a privacy policy URL,
   and a demo video of the scopes in use.
 - Publish `PRIVACY.md` at a public URL and link it in the store listing.
-- Add icons (`src/public/icon/16.png` … `128.png`) and a fixed manifest `key`.
+- Icons live in `public/icon/` (rendered from `assets/icon.svg` with `bun run icons`).
 - Link the source repository in the store listing. AGPL-3.0 requires offering source to users.
 
 ## License
