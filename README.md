@@ -83,7 +83,15 @@ Safety rules in the sync engine:
   and a demo video of the scopes in use.
 - Publish `PRIVACY.md` at a public URL and link it in the store listing.
 - Add icons (`src/public/icon/16.png` … `128.png`) and a fixed manifest `key`.
-- Choose a license and add `LICENSE`.
+- Link the source repository in the store listing. AGPL-3.0 requires offering source to users.
+
+## License
+
+Copyright (C) 2026 soulflowxd
+
+This program is free software: you can redistribute it and/or modify it under the terms of the
+GNU Affero General Public License as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version. See [LICENSE](LICENSE).
 
 ## Credits
 
