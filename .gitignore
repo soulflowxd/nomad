@@ -9,3 +9,4 @@ dist/
 *.pem
 *.key
 web-ext.config.ts
+.keys/
