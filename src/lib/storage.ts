@@ -1,4 +1,5 @@
 import { storage } from 'wxt/utils/storage';
+import type { PlannerItem } from './feeds/canvas-api';
 import type { Feed, SyncState, SyncStatus } from './types';
 
 export interface Settings {
@@ -17,6 +18,13 @@ export const syncStateItem = storage.defineItem<SyncState>('local:syncState', { 
 export const statusItem = storage.defineItem<SyncStatus>('local:status', {
   fallback: { running: false, feedErrors: {} },
 });
+/** Last Canvas API snapshot per site origin, used when the background can't reach Canvas itself. */
+export const canvasCacheItem = storage.defineItem<
+  Record<string, { fetchedAt: number; userId: string; items: PlannerItem[] }>
+>(
+  'local:canvasCache',
+  { fallback: {} },
+);
 export const accountItem = storage.defineItem<{ email?: string } | null>('local:account', { fallback: null });
 /** Short-lived Google access token. Session storage is cleared when the browser closes. */
 export const tokenItem = storage.defineItem<{ accessToken: string; expiresAt: number } | null>('session:token', {

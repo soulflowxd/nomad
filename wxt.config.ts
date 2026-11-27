@@ -5,6 +5,13 @@ export default defineConfig({
   srcDir: 'src',
   modules: ['@wxt-dev/module-react'],
   vite: () => ({ plugins: [tailwindcss()] }),
+  hooks: {
+    // The Canvas content script is registered at runtime per school. Don't let WXT turn its
+    // placeholder match into a required host permission.
+    'build:manifestGenerated': (_wxt, manifest) => {
+      delete manifest.host_permissions;
+    },
+  },
   manifest: {
     name: 'Nomad',
     // Public key only: pins the extension ID (nnmhdppapchhdgfiohekgpmmhoodcojd) so the OAuth

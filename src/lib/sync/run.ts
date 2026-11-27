@@ -1,8 +1,9 @@
 import { browser } from 'wxt/browser';
+import { fetchCanvasUserId, fetchPlannerItems, plannerItemsToEvents, sanitizePlannerItems, type PlannerItem } from '../feeds/canvas-api';
 import { feedOrigin, parseFeed } from '../feeds/parse';
 import { AuthRequiredError, getAccessToken, invalidateToken } from '../google/auth';
 import { createCalendar, deleteEvent, getCalendar, GoogleApiError, insertEvent, renameCalendar, updateEvent } from '../google/calendar';
-import { calendarItem, feedsItem, settingsItem, statusItem, syncStateItem } from '../storage';
+import { calendarItem, canvasCacheItem, feedsItem, settingsItem, statusItem, syncStateItem } from '../storage';
 import type { Feed, NormalizedEvent, SyncState, SyncStats } from '../types';
 import { inSyncWindow, looksTruncated, planSync } from './diff';
 import { prepareEvents } from './ids';
@@ -29,10 +30,54 @@ export function runSync(): Promise<void> {
   return running;
 }
 
-async function fetchFeed(feed: Feed): Promise<NormalizedEvent[]> {
+const CACHE_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
+
+/** Saves a Canvas API snapshot for a site origin. */
+export async function saveCanvasSnapshot(origin: string, userId: string, items: PlannerItem[]): Promise<void> {
+  const cache = await canvasCacheItem.getValue();
+  await canvasCacheItem.setValue({ ...cache, [origin]: { fetchedAt: Date.now(), userId, items } });
+}
+
+const WRONG_USER = 'A different Canvas account is logged in. Log in as the account you connected, or reconnect.';
+
+async function loadCanvasApi(feed: Feed, nowMs: number, warn: (msg: string) => void): Promise<NormalizedEvent[]> {
+  const origin = new URL(feed.url).origin;
+  let items: PlannerItem[];
+  let userId: string | undefined;
+  try {
+    // Works when the browser sends the Canvas session cookie to extension requests.
+    const init: RequestInit = { credentials: 'include', cache: 'no-store' };
+    userId = await fetchCanvasUserId(origin, init);
+    if (feed.canvasUserId && userId !== feed.canvasUserId) throw new Error(WRONG_USER);
+    items = sanitizePlannerItems(await fetchPlannerItems(origin, nowMs, init));
+    await saveCanvasSnapshot(origin, userId, items);
+  } catch (e) {
+    if (e instanceof Error && e.message === WRONG_USER) throw e;
+    // Otherwise use the snapshot the content script took the last time a Canvas tab was open.
+    const cached = (await canvasCacheItem.getValue())[origin];
+    if (!cached || nowMs - cached.fetchedAt > CACHE_MAX_AGE_MS) {
+      throw new Error('Open Canvas in a tab while logged in, so Nomad can read your assignments.');
+    }
+    if (feed.canvasUserId && cached.userId !== feed.canvasUserId) throw new Error(WRONG_USER);
+    items = cached.items;
+    const ageMin = Math.round((nowMs - cached.fetchedAt) / 60_000);
+    if (ageMin > 60) {
+      warn(`Using Canvas data from ${ageMin < 1440 ? `${Math.round(ageMin / 60)} h` : `${Math.round(ageMin / 1440)} days`} ago. Open Canvas in a tab to refresh.`);
+    }
+  }
+  return plannerItemsToEvents(items, feed);
+}
+
+async function fetchFeed(feed: Feed, nowMs: number, warn: (msg: string) => void): Promise<NormalizedEvent[]> {
   const granted = await browser.permissions.contains({ origins: [feedOrigin(feed.url)] });
   if (!granted) throw new Error('Site access not granted. Remove and re-add this feed.');
-  const res = await fetch(feed.url, { credentials: 'omit', cache: 'no-store', redirect: 'follow' });
+  if (feed.mode === 'api') return loadCanvasApi(feed, nowMs, warn);
+  let res: Response;
+  try {
+    res = await fetch(feed.url, { credentials: 'omit', cache: 'no-store', redirect: 'follow' });
+  } catch {
+    throw new Error(`Couldn't reach ${new URL(feed.url).host}. Check the link opens in a tab, or connect Canvas with "Connect Canvas on this tab".`);
+  }
   if (!res.ok) throw new Error(`Feed download failed (HTTP ${res.status}).`);
   const text = await res.text();
   if (text.length > MAX_FEED_BYTES) throw new Error('Feed is too large.');
@@ -98,7 +143,7 @@ async function doSync(): Promise<void> {
     await Promise.all(
       active.map(async (feed) => {
         try {
-          const feedEvents = (await fetchFeed(feed)).filter((e) => inSyncWindow(e, nowMs));
+          const feedEvents = (await fetchFeed(feed, nowMs, (msg) => (feedErrors[feed.id] = msg))).filter((e) => inSyncWindow(e, nowMs));
           events.push(...feedEvents);
           if (looksTruncated(feed.id, feedEvents, state, nowMs)) {
             feedErrors[feed.id] = 'Feed came back empty or much smaller than before. Kept existing events.';
@@ -167,7 +212,7 @@ async function doSync(): Promise<void> {
       lastError: stats.failed
         ? `${stats.failed} event(s) failed to sync. They will be retried next time.`
         : feedProblems
-          ? `${feedProblems} feed(s) could not be downloaded.`
+          ? `${feedProblems} feed(s) need attention.`
           : undefined,
     });
   } catch (e) {

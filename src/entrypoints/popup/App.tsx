@@ -1,6 +1,6 @@
 import { formatDistanceToNow } from 'date-fns';
 import { AlertCircle, CalendarCheck, Link2, Loader2, RefreshCw, ScanSearch, Settings, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { browser } from 'wxt/browser';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,11 +8,11 @@ import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/ca
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { findFeedUrlsInPage } from '@/lib/feeds/detect';
+import { checkCanvasSession, findFeedUrlsInPage } from '@/lib/feeds/detect';
 import { detectFeedKind, feedOrigin, normalizeFeedUrl } from '@/lib/feeds/parse';
 import { getClientId, getRedirectUrl } from '@/lib/google/auth';
 import { send } from '@/lib/messages';
-import { accountItem, calendarItem, feedsItem, statusItem } from '@/lib/storage';
+import { accountItem, calendarItem, canvasCacheItem, feedsItem, statusItem } from '@/lib/storage';
 import type { Feed } from '@/lib/types';
 import { useNow, useStorageValue } from '@/lib/use-storage';
 
@@ -38,6 +38,53 @@ export function App() {
   const [urlInput, setUrlInput] = useState('');
   const [urlTouched, setUrlTouched] = useState(false);
   const [detected, setDetected] = useState<string[] | null>(null);
+
+  // A logged-in Canvas page in the active tab, found when the popup opens.
+  const [canvasTab, setCanvasTab] = useState<{ origin: string; user: string; userId: string } | null>(null);
+  useEffect(() => {
+    void (async () => {
+      try {
+        const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id || !tab.url?.startsWith('https://')) return;
+        const [result] = await browser.scripting.executeScript({ target: { tabId: tab.id }, func: checkCanvasSession });
+        const user = result?.result as { name: string; id: string } | null | undefined;
+        if (user) setCanvasTab({ origin: new URL(tab.url).origin, user: user.name, userId: user.id });
+      } catch {
+        // Not a page we can inspect (e.g. chrome:// pages).
+      }
+    })();
+  }, []);
+  const canvasAlreadyConnected = !!canvasTab && feeds.some((f) => f.mode === 'api' && new URL(f.url).origin === canvasTab.origin);
+
+  async function connectCanvas() {
+    if (!canvasTab) return;
+    const { origin } = canvasTab;
+    // Must be the first await so the click still counts as a user gesture.
+    const granted = await browser.permissions.request({ origins: [`${origin}/*`] });
+    if (!granted) {
+      setError(`Site access to ${hostOf(origin)} is needed to read your assignments.`);
+      return;
+    }
+    const current = await feedsItem.getValue();
+    if (!current.some((f) => f.mode === 'api' && new URL(f.url).origin === origin)) {
+      const feed: Feed = {
+        id: crypto.randomUUID(),
+        kind: 'canvas',
+        mode: 'api',
+        label: `Canvas account · ${hostOf(origin)}`,
+        url: origin,
+        canvasUserId: canvasTab.userId,
+        enabled: true,
+      };
+      // The account replaces any Canvas feed link for the same school (same events, no duplicates).
+      const updated = current.map((f) =>
+        f.mode !== 'api' && f.kind === 'canvas' && new URL(f.url).host === new URL(origin).host ? { ...f, enabled: false } : f,
+      );
+      await feedsItem.setValue([...updated, feed]);
+    }
+    setError(undefined);
+    void run('sync', 'sync-now');
+  }
 
   const clientId = getClientId();
   const urlValid = normalizeFeedUrl(urlInput) !== null;
@@ -86,8 +133,17 @@ export function App() {
   async function removeFeed(feed: Feed) {
     const rest = (await feedsItem.getValue()).filter((f) => f.id !== feed.id);
     await feedsItem.setValue(rest);
+    if (feed.mode === 'api') {
+      // Delete the stored assignment snapshot for this school.
+      const cache = { ...(await canvasCacheItem.getValue()) };
+      delete cache[new URL(feed.url).origin];
+      await canvasCacheItem.setValue(cache);
+    }
     const origin = feedOrigin(feed.url);
-    if (!rest.some((f) => feedOrigin(f.url) === origin)) await browser.permissions.remove({ origins: [origin] });
+    if (!rest.some((f) => feedOrigin(f.url) === origin)) {
+      // Fails for required hosts (e.g. *.instructure.com); that's fine.
+      await browser.permissions.remove({ origins: [origin] }).catch(() => false);
+    }
     void run('sync', 'sync-now');
   }
 
@@ -183,9 +239,22 @@ export function App() {
         <CardHeader>
           <div className="flex flex-col gap-1">
             <CardTitle>Feeds</CardTitle>
-            <CardDescription>Your Canvas “Calendar Feed” or D2L “Subscribe” link.</CardDescription>
+            <CardDescription>Connect Canvas from a Canvas tab, or add a Canvas/D2L calendar feed link.</CardDescription>
           </div>
         </CardHeader>
+
+        {canvasTab && !canvasAlreadyConnected && (
+          <Button onClick={() => void connectCanvas()}>
+            <Link2 />
+            Connect Canvas on this tab
+          </Button>
+        )}
+        {canvasTab && !canvasAlreadyConnected && (
+          <p className="-mt-2 text-xs text-muted-foreground">
+            Logged in as {canvasTab.user} on {hostOf(canvasTab.origin)}. Reads your assignments with your Canvas login, like
+            Better Canvas.
+          </p>
+        )}
 
         {feeds.length === 0 && <p className="text-xs text-muted-foreground">No feeds yet.</p>}
         {feeds.length > 0 && (

@@ -4,7 +4,14 @@ export interface Feed {
   id: string;
   kind: FeedKind;
   label: string;
-  /** Secret: contains the LMS access token. Never log it. */
+  /**
+   * 'ics' (default): `url` is an iCal feed link. Secret: contains an access token, never log it.
+   * 'api': `url` is a Canvas site origin; items are read through the Canvas API with the
+   * user's logged-in session.
+   */
+  mode?: 'ics' | 'api';
+  /** API mode: the Canvas user who connected. Data from any other logged-in user is rejected. */
+  canvasUserId?: string;
   url: string;
   enabled: boolean;
 }

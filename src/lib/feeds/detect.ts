@@ -1,4 +1,25 @@
 /**
+ * Injected into the active tab when the popup opens. Returns the Canvas user's name if this is
+ * a Canvas page with a logged-in session, otherwise null. Must stay self-contained.
+ * Only asks the site's own API, and only when the page looks like Canvas.
+ */
+export async function checkCanvasSession(): Promise<{ name: string; id: string } | null> {
+  const looksLikeCanvas =
+    location.hostname.endsWith('.instructure.com') || !!document.querySelector('#application.ic-app, .ic-app');
+  if (!looksLikeCanvas) return null;
+  try {
+    const res = await fetch('/api/v1/users/self', { headers: { Accept: 'application/json' }, credentials: 'same-origin' });
+    if (!res.ok || !(res.headers.get('content-type') ?? '').includes('json')) return null;
+    const user = JSON.parse((await res.text()).replace(/^while\(1\);/, '')) as { name?: unknown; id?: unknown };
+    if (typeof user.id !== 'string' && typeof user.id !== 'number') return null;
+    const name = typeof user.name === 'string' && user.name ? user.name.slice(0, 100) : 'Canvas user';
+    return { name, id: String(user.id) };
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Injected into the active Canvas/D2L tab (via activeTab + scripting) when the user clicks
  * "Find feed on this tab". Must stay self-contained: it is serialized and run in the page.
  * Returns feed URLs only; nothing else leaves the page.

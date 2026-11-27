@@ -93,7 +93,20 @@ This program is free software: you can redistribute it and/or modify it under th
 GNU Affero General Public License as published by the Free Software Foundation, either version 3
 of the License, or (at your option) any later version. See [LICENSE](LICENSE).
 
+## Canvas account mode (recommended for Canvas)
+
+Open any Canvas page while logged in, click the Nomad icon, then **Connect Canvas on this tab**.
+Nomad then reads `/api/v1/planner/items` using your normal Canvas login, the same way Better
+Canvas does, so no feed link is needed. The background worker tries the API directly on each sync.
+If it can't reach Canvas, it uses the latest snapshot that the Canvas content script took while a
+Canvas tab was open (refreshed at most every 15 minutes, used for up to 14 days). Code:
+`src/lib/feeds/canvas-api.ts`, `src/entrypoints/canvas.content.ts`.
+
 ## Credits
+
+- Canvas API approach adapted from [Better Canvas](https://github.com/UseBetterCanvas/bettercanvas)
+  (AGPL-3.0, © Better Canvas contributors). Modified: pagination, sync window, sanitizing,
+  Google Calendar mapping.
 
 UI primitives adapted from [shadcn/ui](https://ui.shadcn.com) (MIT), built on Radix UI.
 Font: Inter (SIL OFL), bundled locally via Fontsource.
