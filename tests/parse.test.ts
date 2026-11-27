@@ -85,6 +85,16 @@ describe('feed URL helpers', () => {
   it('detects the LMS', () => {
     expect(detectFeedKind(canvasFeed.url)).toBe('canvas');
     expect(detectFeedKind(d2lFeed.url)).toBe('d2l');
+    expect(detectFeedKind('https://learn.uni.edu/webapps/calendar/calendarFeed/abc123/learn.ics')).toBe('blackboard');
+    expect(detectFeedKind('https://moodle.uni.edu/calendar/export_execute.php?userid=5&authtoken=x&preset_what=all')).toBe('moodle');
+    expect(detectFeedKind('webcal://app.schoology.com/calendar/feed/ical/123/abc/ical.ics')).toBe('schoology');
+    expect(detectFeedKind('https://sakai.uni.edu/access/calendar/opaq/1a2b-3c/main.ics')).toBe('sakai');
     expect(detectFeedKind('https://example.com/cal.ics')).toBe('ics');
+  });
+
+  it('labels events with the LMS name', () => {
+    const text = wrap('BEGIN:VEVENT\r\nUID:bb1\r\nDTSTART:20270301T090000Z\r\nSUMMARY:Essay\r\nEND:VEVENT');
+    const ev = parseFeed(text, { id: 'b', kind: 'blackboard', url: 'https://learn.uni.edu/x.ics' })[0]!;
+    expect(ev.description).toContain('Synced from Blackboard');
   });
 });

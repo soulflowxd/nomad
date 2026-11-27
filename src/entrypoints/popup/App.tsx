@@ -9,14 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { checkCanvasSession, findFeedUrlsInPage } from '@/lib/feeds/detect';
-import { detectFeedKind, feedOrigin, normalizeFeedUrl } from '@/lib/feeds/parse';
+import { detectFeedKind, FEED_KIND_LABEL, feedOrigin, normalizeFeedUrl } from '@/lib/feeds/parse';
 import { getClientId, getRedirectUrl } from '@/lib/google/auth';
 import { send } from '@/lib/messages';
 import { accountItem, calendarItem, canvasCacheItem, feedsItem, statusItem } from '@/lib/storage';
 import type { Feed } from '@/lib/types';
 import { useNow, useStorageValue } from '@/lib/use-storage';
 
-const KIND_LABEL: Record<Feed['kind'], string> = { canvas: 'Canvas', d2l: 'D2L', ics: 'iCal' };
+const KIND_LABEL = FEED_KIND_LABEL;
 
 function hostOf(url: string) {
   try {
@@ -239,7 +239,7 @@ export function App() {
         <CardHeader>
           <div className="flex flex-col gap-1">
             <CardTitle>Feeds</CardTitle>
-            <CardDescription>Connect Canvas from a Canvas tab, or add a Canvas/D2L calendar feed link.</CardDescription>
+            <CardDescription>Connect Canvas from a Canvas tab, or add a calendar feed link from Canvas, D2L, Blackboard, Moodle, Schoology or Sakai.</CardDescription>
           </div>
         </CardHeader>
 
@@ -290,9 +290,17 @@ export function App() {
           Find feed on this tab
         </Button>
         {detected && detected.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            No feed found. On Canvas open Calendar → Calendar Feed. On D2L open Calendar → Subscribe, then try again.
-          </p>
+          <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+            <p>No feed link found. Open the page that shows it, then try again:</p>
+            <ul className="list-disc pl-4">
+              <li>Canvas: Calendar → Calendar Feed</li>
+              <li>D2L: Calendar → Subscribe</li>
+              <li>Blackboard: Calendar → Get external calendar link</li>
+              <li>Moodle: Calendar → Import or export → Export → Get calendar URL</li>
+              <li>Schoology: Calendar → Export</li>
+              <li>Sakai: Calendar → Subscribe</li>
+            </ul>
+          </div>
         )}
         {detected?.map((url) => (
           <Button key={url} variant="outline" size="sm" className="justify-start" onClick={() => void addFeed(url)}>

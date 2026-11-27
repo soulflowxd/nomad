@@ -1,4 +1,4 @@
-export type FeedKind = 'canvas' | 'd2l' | 'ics';
+export type FeedKind = 'canvas' | 'd2l' | 'blackboard' | 'moodle' | 'schoology' | 'sakai' | 'ics';
 
 export interface Feed {
   id: string;

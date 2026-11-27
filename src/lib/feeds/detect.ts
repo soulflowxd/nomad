@@ -33,6 +33,14 @@ export function findFeedUrlsInPage(): string[] {
   const patterns = [
     /(?:https|webcal):\/\/[^\s"'<>\\]+\/feeds\/calendars\/user_[A-Za-z0-9]+\.ics/g,
     /(?:https|webcal):\/\/[^\s"'<>\\]+\/d2l\/le\/calendar\/feed\/user\/feed\.ics\?[^\s"'<>\\]*token=[A-Za-z0-9]+[^\s"'<>\\]*/g,
+    // Blackboard Learn: Calendar → "Get external calendar link".
+    /(?:https|webcal):\/\/[^\s"'<>\\]+\/webapps\/calendar\/calendarFeed\/[A-Za-z0-9]+\/learn\.ics/g,
+    // Moodle: Calendar → Import or export calendars → Export → "Get calendar URL".
+    /(?:https|webcal):\/\/[^\s"'<>\\]+\/calendar\/export_execute\.php\?[^\s"'<>\\]*authtoken=[A-Za-z0-9]+[^\s"'<>\\]*/g,
+    // Schoology: Calendar → "Export" / iCal feed.
+    /(?:https|webcal):\/\/[^\s"'<>\\]+\/calendar\/feed\/ical\/[^\s"'<>\\]+\.ics/g,
+    // Sakai: Calendar → Subscribe.
+    /(?:https|webcal):\/\/[^\s"'<>\\]+\/access\/calendar\/opaq\/[A-Za-z0-9-]+\/main\.ics/g,
   ];
   const found = new Set<string>();
   for (const re of patterns) for (const m of haystack.matchAll(re)) found.add(m[0]);

@@ -39,7 +39,7 @@ export function parseFeed(text: string, feed: Pick<Feed, 'id' | 'kind' | 'url'>)
   const jcal = ICAL.parse(text);
   const calendars = (Array.isArray(jcal[0]) ? jcal : [jcal]) as unknown[];
   const host = sourceHost(feed.url);
-  const sourceName = feed.kind === 'canvas' ? 'Canvas' : feed.kind === 'd2l' ? 'D2L' : 'calendar feed';
+  const sourceName = feed.kind === 'ics' ? 'calendar feed' : FEED_KIND_LABEL[feed.kind];
   const out: NormalizedEvent[] = [];
 
   for (const cal of calendars) {
@@ -97,9 +97,23 @@ export function parseFeed(text: string, feed: Pick<Feed, 'id' | 'kind' | 'url'>)
 export function detectFeedKind(url: string): Feed['kind'] {
   const u = url.toLowerCase();
   if (u.includes('/feeds/calendars/') || u.includes('instructure.com')) return 'canvas';
-  if (u.includes('/d2l/')) return 'd2l';
+  if (u.includes('/d2l/') || u.includes('brightspace.com')) return 'd2l';
+  if (u.includes('/webapps/calendar/calendarfeed/') || u.includes('blackboard.com')) return 'blackboard';
+  if (u.includes('/calendar/export_execute.php')) return 'moodle';
+  if (u.includes('/calendar/feed/ical/') || u.includes('schoology.com')) return 'schoology';
+  if (u.includes('/access/calendar/opaq/')) return 'sakai';
   return 'ics';
 }
+
+export const FEED_KIND_LABEL: Record<Feed['kind'], string> = {
+  canvas: 'Canvas',
+  d2l: 'D2L',
+  blackboard: 'Blackboard',
+  moodle: 'Moodle',
+  schoology: 'Schoology',
+  sakai: 'Sakai',
+  ics: 'iCal',
+};
 
 /** Host permission pattern for a feed, e.g. "https://school.instructure.com/*". */
 export function feedOrigin(url: string): string {

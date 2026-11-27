@@ -93,6 +93,21 @@ This program is free software: you can redistribute it and/or modify it under th
 GNU Affero General Public License as published by the Free Software Foundation, either version 3
 of the License, or (at your option) any later version. See [LICENSE](LICENSE).
 
+## Supported school systems
+
+| System | How Nomad reads it | Where to find the link |
+| --- | --- | --- |
+| Canvas | Canvas account (API), or feed link | Any Canvas page → **Connect Canvas on this tab**. Or Calendar → *Calendar Feed* |
+| D2L Brightspace | Feed link | Calendar → *Subscribe* |
+| Blackboard Learn | Feed link | Calendar → *Get external calendar link* (Ultra: Calendar → settings gear) |
+| Moodle | Feed link | Calendar → *Import or export calendars* → *Export*, choose "All events" and the longest time range, then *Get calendar URL* |
+| Schoology | Feed link | Calendar → *Export* (iCal feed) |
+| Sakai | Feed link | Calendar → *Subscribe* |
+| Anything else | Feed link | Any `.ics` / `webcal://` calendar link |
+
+Open the page that shows the link, then click **Find feed on this tab**, or paste the link.
+Some schools turn calendar links off. Then there's nothing to sync from that system.
+
 ## Canvas account mode (recommended for Canvas)
 
 Open any Canvas page while logged in, click the Nomad icon, then **Connect Canvas on this tab**.
